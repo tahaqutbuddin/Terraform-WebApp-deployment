@@ -5,3 +5,5 @@ resource "aws_instance" "dummy-server" {
         name = "Your-DevOps-Mentor-tutorial"
     }
 }
+
+
