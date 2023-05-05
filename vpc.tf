@@ -1,38 +1,36 @@
 locals {
-  public_cidr = ["10.0.0.0/24","10.0.1.0/24","10.0.2.0/24"]
-  private_cidr = ["10.0.100.0/24","10.0.101.0/24","10.0.102.0/24"]
   availability_zone = ["us-east-1a","us-east-1b","us-east-1c"]
 }
 
 # For printing out values on Console
 # output count {
-#   value = length(local.public_cidr)
+#   value = length(var.public_cidr)
 # }
 
 resource "aws_vpc" "main"{
-    cidr_block = "10.0.0.0/16"
+    cidr_block = var.vpc_cidr
     tags = {
-        Name = "Your-DevOps-Mentor-Tutorial"
+        Name = var.env_code
     }
 } 
 
 resource "aws_subnet" "public" {
-  count = length(local.public_cidr)         // count will create public subnets iteratively
+  count = length(var.public_cidr)         // count will create public subnets iteratively
   vpc_id     = aws_vpc.main.id
-  cidr_block = local.public_cidr[count.index]     //count.index will generate indexes 0,1
+  cidr_block = var.public_cidr[count.index]     //count.index will generate indexes 0,1
   availability_zone = local.availability_zone[count.index]
   tags = {
-    Name = "Public${ count.index+1 }-Your-DevOps-Mentor-Tutorial"
+    Name = "Public${ count.index+1 }-${var.env_code}"
   }
 }
 
 resource "aws_subnet" "private" {
-  count = length(local.private_cidr)
+  count = length(var.private_cidr)
   vpc_id     = aws_vpc.main.id
-  cidr_block = local.private_cidr[count.index]
+  cidr_block = var.private_cidr[count.index]
   availability_zone = local.availability_zone[count.index]
   tags = {
-    Name = "Private${ count.index+1 }-Your-DevOps-Mentor-Tutorial"
+    Name = "Private${ count.index+1 }-${var.env_code}"
   }
 }
 
@@ -40,7 +38,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "IGW-Your-DevOps-Mentor-Tutorial"
+    Name = "IGW-${ var.env_code }"
   }
 }
 
@@ -53,21 +51,24 @@ resource "aws_route_table" "mainRT" {
   }
 
   tags = {
-    Name = "RT-Your-DevOps-Mentor-Tutorial"
+    Name = "RT-${ var.env_code }"
   }
 }
 
 resource "aws_route_table_association" "public" {
-  count = length(local.public_cidr)
+  count = length(var.public_cidr)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.mainRT.id
 }
 
 
-// PAID Services Code below
+// PAID Services Code below, 
+// Variables for naming convention not set below code.
+
+
 /*
 resource "aws_eip" "nat" {
-  count = length(local.public_cidr)
+  count = length(var.public_cidr)
   vpc      = true
   tags = {
     Name = "nat${count.index+1}"
@@ -75,7 +76,7 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "natTable" {
-  count = length(local.public_cidr)
+  count = length(var.public_cidr)
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id  //nat always placed in public subnet
 
@@ -86,7 +87,7 @@ resource "aws_nat_gateway" "natTable" {
 }
 
 resource "aws_route_table" "privateRT" {
-  count = length(local.private_cidr)
+  count = length(var.private_cidr)
   vpc_id = aws_vpc.main.id
 
   route {
@@ -101,7 +102,7 @@ resource "aws_route_table" "privateRT" {
 
 
 resource "aws_route_table_association" "private" {
-  count = length(local.private_cidr)
+  count = length(var.private_cidr)
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.privateRT[count.index].id
 }
