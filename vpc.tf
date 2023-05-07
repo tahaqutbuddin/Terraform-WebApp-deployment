@@ -1,6 +1,13 @@
-locals {
-  availability_zone = ["us-east-1a", "us-east-1b", "us-east-1c"]
+# locals {
+#   availability_zone = ["us-east-1a", "us-east-1b", "us-east-1c"]
+# }
+
+
+# dynamically fetches availability zones for current region
+data "aws_availability_zones" "available" {
+  state = "available"
 }
+
 
 # For printing out values on Console
 # output count {
@@ -18,7 +25,11 @@ resource "aws_subnet" "public" {
   count             = length(var.public_cidr) // count will create public subnets iteratively
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.public_cidr[count.index] //count.index will generate indexes 0,1
-  availability_zone = local.availability_zone[count.index]
+  
+
+  # availability_zone = local.availability_zone[count.index]   // hardcoded method using local
+  availability_zone = data.aws_availability_zones.available.names[count.index]  #dynamically assigns AZ
+  
   tags = {
     Name = "Public${count.index + 1}-${var.env_code}"
   }
@@ -28,7 +39,7 @@ resource "aws_subnet" "private" {
   count             = length(var.private_cidr)
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.private_cidr[count.index]
-  availability_zone = local.availability_zone[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   tags = {
     Name = "Private${count.index + 1}-${var.env_code}"
   }

@@ -1,5 +1,25 @@
+#Provide Data source to fetch AMI
+data "aws_ami" "amazonlinux"{
+    most_recent      = true
+    
+    filter {
+        name   = "name"
+        values = ["amzn2-ami-kernel-*"]
+    }
+
+    filter {
+        name   = "root-device-type"
+        values = ["ebs"]
+    }
+
+    filter {
+        name   = "virtualization-type"
+        values = ["hvm"]
+    }
+}
+
 resource "aws_instance" "public" {
-  ami                        = "ami-0889a44b331db0194"
+  ami                        = data.aws_ami.amazonlinux.id              // fetches AMI dynmically using data source
   associate_public_ip_address = true
   instance_type              = "t3.micro"
   vpc_security_group_ids     = [aws_security_group.public.id]
@@ -36,7 +56,7 @@ resource "aws_security_group" "public" {
 }
 
 resource "aws_instance" "private" {
-  ami                        = "ami-0889a44b331db0194"
+  ami                        = data.aws_ami.amazonlinux.id
   instance_type              = "t3.micro"
   vpc_security_group_ids     = [aws_security_group.private.id]
   subnet_id                  = aws_subnet.private[0].id
