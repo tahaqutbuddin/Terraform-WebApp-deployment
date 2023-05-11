@@ -1,30 +1,31 @@
 #Provide Data source to fetch AMI
-data "aws_ami" "amazonlinux"{
-    most_recent      = true
-    
-    filter {
-        name   = "name"
-        values = ["amzn2-ami-kernel-*"]
-    }
+data "aws_ami" "amazonlinux" {
+  most_recent = true
 
-    filter {
-        name   = "root-device-type"
-        values = ["ebs"]
-    }
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-kernel-*"]
+  }
 
-    filter {
-        name   = "virtualization-type"
-        values = ["hvm"]
-    }
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
 
 resource "aws_instance" "public" {
-  ami                        = data.aws_ami.amazonlinux.id              // fetches AMI dynmically using data source
+  ami                         = data.aws_ami.amazonlinux.id // fetches AMI dynmically using data source
   associate_public_ip_address = true
-  instance_type              = "t3.micro"
-  vpc_security_group_ids     = [aws_security_group.public.id]
-  subnet_id                  = aws_subnet.public[0].id
-  key_name                   = "terraform-practice"
+  instance_type               = "t3.micro"
+  vpc_security_group_ids      = [aws_security_group.public.id]
+  subnet_id                   = aws_subnet.public[0].id
+  key_name                    = "terraform-practice"
+  user_data                   = file("user-data.sh")
   tags = {
     Name = "Public-${var.env_code}"
   }
@@ -34,7 +35,7 @@ resource "aws_instance" "public" {
 resource "aws_security_group" "public" {
   name        = "Public-${var.env_code}"
   description = "Allow inbound traffic"
-  vpc_id         = aws_vpc.main.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port   = 22
@@ -65,11 +66,11 @@ resource "aws_security_group" "public" {
 }
 
 resource "aws_instance" "private" {
-  ami                        = data.aws_ami.amazonlinux.id
-  instance_type              = "t3.micro"
-  vpc_security_group_ids     = [aws_security_group.private.id]
-  subnet_id                  = aws_subnet.private[0].id
-  key_name                   = "terraform-practice"
+  ami                    = data.aws_ami.amazonlinux.id
+  instance_type          = "t3.micro"
+  vpc_security_group_ids = [aws_security_group.private.id]
+  subnet_id              = aws_subnet.private[0].id
+  key_name               = "terraform-practice"
   tags = {
     Name = "Private-${var.env_code}"
   }
@@ -79,7 +80,7 @@ resource "aws_instance" "private" {
 resource "aws_security_group" "private" {
   name        = "Private-${var.env_code}"
   description = "Allow VPC traffic"
-  vpc_id         = aws_vpc.main.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port   = 22

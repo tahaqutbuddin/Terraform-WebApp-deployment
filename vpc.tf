@@ -22,14 +22,14 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public" {
-  count             = length(var.public_cidr) // count will create public subnets iteratively
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.public_cidr[count.index] //count.index will generate indexes 0,1
-  
+  count      = length(var.public_cidr) // count will create public subnets iteratively
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.public_cidr[count.index] //count.index will generate indexes 0,1
+
 
   # availability_zone = local.availability_zone[count.index]   // hardcoded method using local
-  availability_zone = data.aws_availability_zones.available.names[count.index]  #dynamically assigns AZ
-  
+  availability_zone = data.aws_availability_zones.available.names[count.index] #dynamically assigns AZ
+
   tags = {
     Name = "Public${count.index + 1}-${var.env_code}"
   }
