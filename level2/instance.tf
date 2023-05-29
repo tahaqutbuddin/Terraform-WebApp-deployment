@@ -23,9 +23,12 @@ resource "aws_instance" "public" {
   associate_public_ip_address = true
   instance_type               = "t3.micro"
   vpc_security_group_ids      = [aws_security_group.public.id]
-  subnet_id                   = aws_subnet.public[0].id
-  key_name                    = "terraform-practice"
-  user_data                   = file("user-data.sh")
+  # subnet_id                   = aws_subnet.public[0].id
+  //when vpc is in different level directory, then output from there, and use data source to import it like this over here
+  subnet_id = data.terraform_remote_state.level1.outputs.public_subnet_id[0]
+
+  key_name  = "terraform-practice"
+  user_data = file("user-data.sh")
   tags = {
     Name = "Public-${var.env_code}"
   }
@@ -35,7 +38,8 @@ resource "aws_instance" "public" {
 resource "aws_security_group" "public" {
   name        = "Public-${var.env_code}"
   description = "Allow inbound traffic"
-  vpc_id      = aws_vpc.main.id
+  # vpc_id      = aws_vpc.main.id
+  vpc_id = data.terraform_remote_state.level1.outputs.vpc_id
 
   ingress {
     from_port   = 22
@@ -69,8 +73,11 @@ resource "aws_instance" "private" {
   ami                    = data.aws_ami.amazonlinux.id
   instance_type          = "t3.micro"
   vpc_security_group_ids = [aws_security_group.private.id]
-  subnet_id              = aws_subnet.private[0].id
-  key_name               = "terraform-practice"
+  # subnet_id              = aws_subnet.private[0].id
+  //when vpc is in different level directory, then output from there, and use data source to import it like this over here
+  subnet_id = data.terraform_remote_state.level1.outputs.private_subnet_id[0]
+
+  key_name = "terraform-practice"
   tags = {
     Name = "Private-${var.env_code}"
   }
@@ -80,14 +87,15 @@ resource "aws_instance" "private" {
 resource "aws_security_group" "private" {
   name        = "Private-${var.env_code}"
   description = "Allow VPC traffic"
-  vpc_id      = aws_vpc.main.id
+  # vpc_id      = aws_vpc.main.id
+  vpc_id = data.terraform_remote_state.level1.outputs.vpc_id
 
   ingress {
     from_port   = 22
     to_port     = 22
     description = "SSH"
     protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
+    cidr_blocks = [data.terraform_remote_state.level1.outputs.vpc_cidr]
   }
   egress {
     from_port   = 0

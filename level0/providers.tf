@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "responsive-filemanager"
-    key    = "remote-state.tfstate"
+    bucket = "remote-state-taha"
+    key    = "level0.tfstate"
     region = "us-east-1"
   }
 }
@@ -9,4 +9,6 @@ terraform {
 provider "aws" {
   region = "us-east-1"
 }
+
+
 
